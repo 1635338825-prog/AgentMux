@@ -1,0 +1,18 @@
+{
+  "name": "@deepseek-ai/dsh-desktop",
+  "description": "AgentMux Windows desktop shell for controlling multiple Agent tools",
+  "version": "0.1.2-rc.1",
+  "publishConfig": { "access": "public" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "apps/desktop"
+  },
+  "type": "module",
+  "main": "lib/bin.js",
+  "bin": { "agentmux": "lib/bin.js" },
+  "files": ["lib/*.js"],
+  "scripts": { "start": "tsx src/bin.ts" },
+  "license": "MIT",
+  "devDependencies": { "@types/node": "^22.20.0" }
+}

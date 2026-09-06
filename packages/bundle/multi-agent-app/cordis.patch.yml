@@ -1,0 +1,26 @@
+# Multi-agent browser profile layer. The base and Web bundles are applied
+# first; this layer selects the shipped orchestration preset and registers the
+# four product providers on the Host plane. The preset independently owns
+# their model-facing tools.
+
+- id: agent-presets
+  config:
+    default: multi-agent
+
+- insert:
+    - id: subagent-codex
+      name: '@deepseek-ai/dsh-subagent-codex'
+
+    - id: subagent-claude-code
+      name: '@deepseek-ai/dsh-subagent-claude-code'
+
+    - id: subagent-doubao-desktop
+      name: '@deepseek-ai/dsh-subagent-doubao-desktop'
+      config:
+        cdpUrl: http://127.0.0.1:9225
+
+    - id: subagent-qwen
+      name: '@deepseek-ai/dsh-subagent-qwen'
+      config:
+        command: 'C:\Program Files\Volta\volta.exe'
+        commandArgs: ['run', 'bl']

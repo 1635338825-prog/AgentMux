@@ -1,0 +1,3 @@
+name: 多 Agent 编排
+description: 由 DeepSeek 主 Agent 协调本地子代理、Codex、Claude Code、豆包桌面版与千问，并对关键结论进行独立复核和证据汇总。
+order: 0

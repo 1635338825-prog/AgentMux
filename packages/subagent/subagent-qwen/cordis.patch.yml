@@ -1,0 +1,4 @@
+# Optional Profile Bundle: register the Qwen provider on the Host plane.
+- insert:
+    - id: subagent-qwen
+      name: '@deepseek-ai/dsh-subagent-qwen'
