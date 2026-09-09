@@ -70,9 +70,13 @@ async function createMainWindow(url: string): Promise<void> {
 
 async function start(): Promise<void> {
   const developmentRoot = app.isPackaged ? undefined : resolve(app.getAppPath(), '..', '..')
+  const packagedRuntimeRoot = app.isPackaged
+    ? join(process.resourcesPath, 'runtime', 'node_modules', '@deepseek-ai', 'dsh')
+    : undefined
   harness = await connectHarness({
     argv: process.argv.slice(1),
     ...(developmentRoot === undefined ? {} : { developmentRoot }),
+    ...(packagedRuntimeRoot === undefined ? {} : { packagedRuntimeRoot }),
     executable: process.execPath,
   })
   await createMainWindow(harness.url)

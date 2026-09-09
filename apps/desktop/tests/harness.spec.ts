@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { authenticatedLoopbackUrl, validProjectRoot } from '../src/harness.ts'
+import { authenticatedLoopbackUrl, runtimeCliPath, validProjectRoot } from '../src/harness.ts'
 
 describe('AgentMux Electron Harness bridge', () => {
   it('accepts only one authenticated loopback URL on the desktop port', () => {
@@ -12,6 +12,8 @@ describe('AgentMux Electron Harness bridge', () => {
   })
 
   it('recognizes the built AgentMux repository as a Harness runtime root', () => {
-    expect(validProjectRoot(process.cwd())).toBe(true)
+    const repositoryRoot = '.'
+    expect(validProjectRoot(repositoryRoot)).toBe(true)
+    expect(runtimeCliPath(repositoryRoot)).toMatch(/apps[\\/]cli[\\/]lib[\\/]bin\.js$/)
   })
 })

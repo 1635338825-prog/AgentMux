@@ -16,7 +16,8 @@
     "build": "esbuild src/main.ts --bundle --platform=node --format=esm --target=node22 --external:electron --outfile=lib/main.js",
     "dev": "pnpm run build && electron . --project-root ../..",
     "start": "electron .",
-    "dist:win": "pnpm run build && electron-builder --win nsis --publish never"
+    "prepare:runtime": "node scripts/prepare-runtime.mjs",
+    "dist:win": "pnpm run build && pnpm run prepare:runtime && electron-builder --win nsis --publish never"
   },
   "license": "MIT",
   "devDependencies": {

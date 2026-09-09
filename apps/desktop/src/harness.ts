@@ -11,6 +11,8 @@ export const DEFAULT_ORIGIN = 'http://127.0.0.1:3080/'
 const READY_URL = /dsh web:\s+(http:\/\/127\.0\.0\.1:\d+\/\?token=[A-Za-z0-9_-]+)/u
 
 interface DesktopState {
+  runtimeRoot?: string
+  /** Compatibility with the first desktop preview. */
   projectRoot?: string
 }
 
@@ -46,11 +48,11 @@ async function loadState(): Promise<DesktopState> {
   }
 }
 
-async function saveProjectRoot(projectRoot: string): Promise<void> {
+async function saveRuntimeRoot(runtimeRoot: string): Promise<void> {
   const path = statePath()
   const state = await loadState()
   await mkdir(dirname(path), { recursive: true })
-  await writeFile(path, `${JSON.stringify({ ...state, projectRoot }, null, 2)}\n`, 'utf8')
+  await writeFile(path, `${JSON.stringify({ ...state, runtimeRoot }, null, 2)}\n`, 'utf8')
 }
 
 function argument(argv: readonly string[], name: string): string | undefined {
@@ -60,18 +62,30 @@ function argument(argv: readonly string[], name: string): string | undefined {
   return value
 }
 
-export function validProjectRoot(path: string | undefined): path is string {
-  return path !== undefined
-    && existsSync(join(path, 'package.json'))
-    && existsSync(join(path, 'apps', 'cli', 'lib', 'bin.js'))
+export function runtimeCliPath(path: string | undefined): string | undefined {
+  if (path === undefined || !existsSync(join(path, 'package.json'))) return undefined
+  const standalone = join(path, 'lib', 'bin.js')
+  if (existsSync(standalone)) return standalone
+  const workspace = join(path, 'apps', 'cli', 'lib', 'bin.js')
+  return existsSync(workspace) ? workspace : undefined
 }
 
-export async function resolveProjectRoot(argv: readonly string[], developmentRoot?: string): Promise<string | undefined> {
+export function validProjectRoot(path: string | undefined): path is string {
+  return runtimeCliPath(path) !== undefined
+}
+
+export async function resolveRuntimeRoot(
+  argv: readonly string[],
+  developmentRoot?: string,
+  packagedRuntimeRoot?: string,
+): Promise<string | undefined> {
   const state = await loadState()
   const explicit = argument(argv, '--project-root')
   const candidates = [
+    packagedRuntimeRoot,
     explicit === undefined ? undefined : resolve(explicit),
     process.env.AGENTMUX_PROJECT_ROOT,
+    state.runtimeRoot,
     state.projectRoot,
     developmentRoot,
     process.cwd(),
@@ -114,8 +128,9 @@ async function existingHarnessUrl(): Promise<string | undefined> {
   }
 }
 
-async function startHarness(projectRoot: string, executable: string): Promise<HarnessConnection> {
-  const cli = join(projectRoot, 'apps', 'cli', 'lib', 'bin.js')
+async function startHarness(runtimeRoot: string, executable: string): Promise<HarnessConnection> {
+  const cli = runtimeCliPath(runtimeRoot)
+  if (cli === undefined) throw new Error('agentmux-desktop: invalid Harness runtime')
   const child = spawn(executable, [
     cli,
     '--profile', 'multi-agent',
@@ -123,7 +138,7 @@ async function startHarness(projectRoot: string, executable: string): Promise<Ha
     '--host', '127.0.0.1',
     '--port', '3080',
   ], {
-    cwd: projectRoot,
+    cwd: runtimeRoot,
     env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
     stdio: ['ignore', 'pipe', 'pipe'],
     windowsHide: true,
@@ -148,20 +163,25 @@ async function startHarness(projectRoot: string, executable: string): Promise<Ha
       finish(() => { reject(new Error(`agentmux-desktop: Harness exited during startup (${String(code)})`)) })
     })
   })
-  await saveProjectRoot(projectRoot)
+  await saveRuntimeRoot(runtimeRoot)
   return { process: child, url }
 }
 
 export async function connectHarness(options: {
   argv: readonly string[]
   developmentRoot?: string
+  packagedRuntimeRoot?: string
   executable: string
 }): Promise<HarnessConnection> {
   const existing = await existingHarnessUrl()
   if (existing !== undefined) return { url: existing }
-  const projectRoot = await resolveProjectRoot(options.argv, options.developmentRoot)
-  if (projectRoot === undefined) {
-    throw new Error('AgentMux cannot find its Harness runtime. Reinstall AgentMux from the built project or set AGENTMUX_PROJECT_ROOT.')
+  const runtimeRoot = await resolveRuntimeRoot(
+    options.argv,
+    options.developmentRoot,
+    options.packagedRuntimeRoot,
+  )
+  if (runtimeRoot === undefined) {
+    throw new Error('AgentMux cannot find its embedded Harness runtime. Reinstall AgentMux.')
   }
-  return startHarness(projectRoot, options.executable)
+  return startHarness(runtimeRoot, options.executable)
 }

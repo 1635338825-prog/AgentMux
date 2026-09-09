@@ -13,6 +13,11 @@ files:
   - package.json
   - '!**/*.map'
 asar: true
+extraResources:
+  - from: runtime/node_modules
+    to: runtime/node_modules
+    filter:
+      - '**/*'
 win:
   icon: assets/harness-desktop.ico
   target:
