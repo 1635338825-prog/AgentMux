@@ -7,23 +7,23 @@ kind: "package-reference"
 
 English | [中文](README.zh.md)
 
-AgentMux opens the existing multi-agent Web surface in a dedicated application window. It preserves the browser edition at `http://127.0.0.1:3080/`, shares the same DeepSeek Harness-based backend, session memory, and Agent features, and keeps a separate local window profile. When the Web service restarts, the shell reads its current user-protected runtime handoff instead of reopening a stale tokenized URL.
+AgentMux Desktop is a native Electron application. Electron owns the application process, native window, single-instance lifecycle, navigation policy, and Harness child process; Microsoft Edge is no longer launched. The browser edition at `http://127.0.0.1:3080/` remains available and shares the same DeepSeek Harness-based backend, session memory, Agent routing, and model selections.
 
-Run it from the repository with `pnpm desktop`. If the Harness server is not running, the shell starts the `multi-agent` profile and stops that owned server when the window closes. If the server is already running, it reuses it.
+Run it from the repository with `pnpm desktop`. If Harness is not running, Electron starts the `multi-agent` profile with its embedded Node-compatible runtime and stops that owned process when the app quits. If Harness is already running, Electron validates and reuses the current user-protected authentication handoff.
 
-The first development run may pass the printed authenticated URL with `pnpm desktop -- --url <url>`. The short-lived launch URL is saved under the user's local application-data directory; API keys are never written by this shell.
+External links open in the system browser, while the AgentMux workspace remains inside the native window. Renderer Node integration is disabled, context isolation and sandboxing are enabled, and navigation is restricted to the authenticated loopback service. API keys are never written by the desktop shell.
 
 ## Build and install the Windows application
 
-Build the portable application and installer with:
+Build the Electron NSIS installer with:
 
 ```sh
 pnpm desktop:package
 ```
 
-The command writes `AgentMux.exe`, `AgentMux-Setup.exe`, and `latest.json` under `apps/desktop/dist`. Run the Setup executable once from the built repository. It installs the application under the current user's local Programs directory, creates Desktop and Start Menu shortcuts, enables launch at sign-in, remembers the built project root, and opens the installed application. Pass `--no-startup` to Setup when launch at sign-in is not wanted.
+The command writes `AgentMux-Setup.exe` under `apps/desktop/dist`. The installer places AgentMux in the selected Windows application directory, creates Desktop and Start Menu shortcuts, registers an uninstaller, and can launch AgentMux when setup finishes.
 
-Automatic updates are manifest-driven. Host `latest.json` and the matching Setup executable at the same HTTPS origin, then pass `--update-manifest https://example.com/path/latest.json` on the first Setup run. Later launches check that manifest, require a newer semantic version, verify the downloaded Setup SHA-256, replace the installed executable after the current process exits, and reopen the application. No update endpoint is enabled by default.
+The Electron Builder metadata targets this repository's GitHub Releases. Automatic in-app installation remains disabled until signed release artifacts and a stable update channel are available.
 
 ## Model Experience
 
@@ -43,8 +43,7 @@ None. Prompt construction remains owned by the shared Web and Host packages.
 
 ## Known Limitations and Deferred Work
 
-- Windows currently uses the installed Microsoft Edge application-mode runtime for its dedicated window.
 - The generated installer is unsigned. Production distribution still requires an Authenticode certificate and a trusted HTTPS release origin.
-- The packaged launcher contains its own Node runtime, but the current backend still starts from the remembered built repository and requires the product CLIs used by the selected Agents.
-- A running server started outside the desktop shell must have been opened once with its authenticated launch URL in the desktop profile.
+- This first Electron build still starts the Harness backend from the remembered built AgentMux repository. Bundling and pruning the complete Harness runtime is the next packaging milestone.
+- Codex, Claude Code, Doubao Desktop, and Qwen still require their respective local applications or CLIs when selected.
 - The desktop and browser surfaces intentionally share features and backend state; this is not a second UI implementation.

@@ -156,8 +156,8 @@
     "demo:inspector": "node --import tsx/esm apps/cli/src/bin.ts web --patch ./packages/experimental/inspector/cordis.source.patch.yml",
     "mock:llm": "node --import tsx packages/test-support/llm-mock-server/src/bin.ts",
     "dev:web": "tsx scripts/dev-web.ts --poll",
-    "desktop": "tsx apps/desktop/src/bin.ts",
-    "desktop:package": "tsc -b apps/desktop && esbuild apps/desktop/src/bin.ts --bundle --platform=node --format=cjs --target=node24 --outfile=apps/desktop/dist/desktop.cjs && pkg --sea apps/desktop/dist/desktop.cjs --targets node24-win-x64 --output apps/desktop/dist/AgentMux.exe && tsx apps/desktop/scripts/stamp.ts",
+    "desktop": "pnpm --filter @deepseek-ai/dsh-desktop dev",
+    "desktop:package": "pnpm --filter @deepseek-ai/dsh-desktop dist:win",
     "postinstall": "node scripts/install-lefthook.mjs"
   },
   "devDependencies": {

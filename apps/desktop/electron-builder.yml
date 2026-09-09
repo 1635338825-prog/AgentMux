@@ -1,0 +1,31 @@
+appId: com.agentmux.desktop
+productName: AgentMux
+executableName: AgentMux
+artifactName: 'AgentMux-Setup.${ext}'
+copyright: Copyright (c) 2026 AgentMux contributors
+directories:
+  output: dist
+  buildResources: assets
+files:
+  - lib/**/*
+  - assets/harness-desktop.png
+  - assets/harness-desktop.ico
+  - package.json
+  - '!**/*.map'
+asar: true
+win:
+  icon: assets/harness-desktop.ico
+  target:
+    - nsis
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: AgentMux
+  runAfterFinish: true
+publish:
+  provider: github
+  owner: 1635338825-prog
+  repo: AgentMux

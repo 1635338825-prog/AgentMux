@@ -1,7 +1,8 @@
 {
   "name": "@deepseek-ai/dsh-desktop",
-  "description": "AgentMux Windows desktop shell for controlling multiple Agent tools",
+  "description": "Native Electron desktop application for the AgentMux multi-Agent terminal",
   "version": "0.1.2-rc.1",
+  "author": "AgentMux contributors",
   "publishConfig": { "access": "public" },
   "repository": {
     "type": "git",
@@ -9,10 +10,19 @@
     "directory": "apps/desktop"
   },
   "type": "module",
-  "main": "lib/bin.js",
-  "bin": { "agentmux": "lib/bin.js" },
+  "main": "lib/main.js",
   "files": ["lib/*.js"],
-  "scripts": { "start": "tsx src/bin.ts" },
+  "scripts": {
+    "build": "esbuild src/main.ts --bundle --platform=node --format=esm --target=node22 --external:electron --outfile=lib/main.js",
+    "dev": "pnpm run build && electron . --project-root ../..",
+    "start": "electron .",
+    "dist:win": "pnpm run build && electron-builder --win nsis --publish never"
+  },
   "license": "MIT",
-  "devDependencies": { "@types/node": "^22.20.0" }
+  "devDependencies": {
+    "@types/node": "^22.20.0",
+    "electron": "^35.1.0",
+    "electron-builder": "^26.0.12",
+    "esbuild": "^0.25.0"
+  }
 }
