@@ -34,3 +34,4 @@ publish:
   provider: github
   owner: 1635338825-prog
   repo: AgentMux
+  tagNamePrefix: agentmux-v

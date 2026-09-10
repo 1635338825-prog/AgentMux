@@ -23,7 +23,9 @@ pnpm desktop:package
 
 The command regenerates the standalone runtime, prunes development-only files, and writes `AgentMux-Setup.exe` under `apps/desktop/dist`. The installer places AgentMux and its runtime in the selected Windows application directory, creates Desktop and Start Menu shortcuts, registers an uninstaller, and can launch AgentMux when setup finishes. The compressed installer is substantially larger than the thin desktop preview because it carries the complete local backend.
 
-The Electron Builder metadata targets this repository's GitHub Releases. Automatic in-app installation remains disabled until signed release artifacts and a stable update channel are available.
+The Electron Builder metadata targets this repository's GitHub Releases. Packaged builds check that channel after startup and every six hours. AgentMux asks before downloading an update and again before restarting to install it; choosing not to restart installs the downloaded update when the application exits.
+
+Push a tag matching `agentmux-v<desktop package version>` to run the Windows release workflow. It builds the complete standalone installer, generates `latest.yml`, the differential-download blockmap, and SHA-256 checksums, then creates the corresponding GitHub Release. If repository secrets `WINDOWS_CERTIFICATE` and `WINDOWS_CERTIFICATE_PASSWORD` contain a base64-encoded Authenticode PFX and its password, Electron Builder signs the installer automatically. Releases remain unsigned when those secrets are absent.
 
 ## Model Experience
 
@@ -43,6 +45,6 @@ None. Prompt construction remains owned by the shared Web and Host packages.
 
 ## Known Limitations and Deferred Work
 
-- The generated installer is unsigned. Production distribution still requires an Authenticode certificate and a trusted HTTPS release origin.
+- Builds are unsigned until a trusted Authenticode PFX is added through the release secrets described above. Unsigned installers can trigger a Windows reputation warning; auto-update metadata still verifies the downloaded file hash, but publisher identity verification requires signing.
 - Provider accounts and credentials remain user-owned and are not bundled. Codex and Claude runtime binaries are carried by their pinned official SDK packages; Doubao Desktop and Qwen integrations still require their respective local product or CLI when selected.
 - The desktop and browser surfaces intentionally share features and backend state; this is not a second UI implementation.

@@ -156,9 +156,9 @@
     "demo:inspector": "node --import tsx/esm apps/cli/src/bin.ts web --patch ./packages/experimental/inspector/cordis.source.patch.yml",
     "mock:llm": "node --import tsx packages/test-support/llm-mock-server/src/bin.ts",
     "dev:web": "tsx scripts/dev-web.ts --poll",
-    "desktop": "pnpm --filter @deepseek-ai/dsh-desktop dev",
+    "desktop": "pnpm --filter agentmux-desktop dev",
     "desktop:runtime:sync": "node apps/desktop/scripts/sync-runtime-manifest.mjs",
-    "desktop:package": "pnpm --filter @deepseek-ai/dsh-desktop dist:win",
+    "desktop:package": "pnpm --filter agentmux-desktop dist:win",
     "postinstall": "node scripts/install-lefthook.mjs"
   },
   "devDependencies": {

@@ -23,7 +23,9 @@ pnpm desktop:package
 
 命令会重新生成独立运行时、清除仅供开发使用的文件，并在 `apps/desktop/dist` 下生成 `AgentMux-Setup.exe`。安装程序会把 AgentMux 及其运行时安装到选择的 Windows 应用目录，创建桌面与开始菜单快捷方式，注册卸载程序，并可在安装结束后直接启动 AgentMux。由于包含完整本地后台，压缩安装包会明显大于早期的轻量桌面预览版。
 
-Electron Builder 的发布信息已经指向本项目的 GitHub Releases。在具备代码签名和稳定更新通道前，应用内自动安装更新仍保持关闭。
+Electron Builder 的发布信息已经指向本项目的 GitHub Releases。正式安装版会在启动后及每六小时检查一次更新；发现更新后先询问是否下载，下载完成后再次询问是否立即重启安装。如暂不重启，已下载更新会在退出应用时安装。
+
+推送符合 `agentmux-v<桌面包版本>` 格式的标签即可运行 Windows 发布流程。流程会构建完整独立安装包，生成 `latest.yml`、差分下载 blockmap 和 SHA-256 校验文件，并创建对应的 GitHub Release。如果仓库 Secrets 中的 `WINDOWS_CERTIFICATE` 和 `WINDOWS_CERTIFICATE_PASSWORD` 分别保存经过 Base64 编码的 Authenticode PFX 及其密码，Electron Builder 会自动签名；未配置证书时仍可发布未签名版本。
 
 ## 模型体验
 
@@ -43,6 +45,6 @@ Electron Builder 的发布信息已经指向本项目的 GitHub Releases。在�
 
 ## 已知限制与后续工作
 
-- 生成的安装程序尚未签名；正式分发仍需 Authenticode 证书与可信的 HTTPS 发布地址。
+- 在按上述方式加入可信 Authenticode PFX 前，构建仍是未签名状态，Windows 可能显示信誉提示。自动更新元数据仍会校验下载文件哈希，但发布者身份验证必须依赖代码签名。
 - 各模型服务的账号和凭据仍由用户自行管理，不会写入安装包。Codex 与 Claude 的运行程序由锁定版本的官方 SDK 包携带；选择豆包桌面版或千问时，仍需对应的本地产品或 CLI。
 - 桌面端与网页端有意共用功能和后端状态，不会维护第二套容易分叉的界面。

@@ -1,0 +1,80 @@
+name: AgentMux Desktop Release
+
+on:
+  push:
+    tags:
+      - 'agentmux-v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: agentmux-desktop-release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PRIMARY_NODE_VERSION: '24'
+  DSH_TELEMETRY_DISABLED: '1'
+
+jobs:
+  windows:
+    name: Build and publish Windows installer
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.PRIMARY_NODE_VERSION }}
+          cache: pnpm
+
+      - name: Verify release tag
+        shell: pwsh
+        run: |
+          $version = (Get-Content apps/desktop/package.json | ConvertFrom-Json).version
+          $expected = "agentmux-v$version"
+          if ($env:GITHUB_REF_NAME -ne $expected) {
+            throw "Release tag $env:GITHUB_REF_NAME does not match $expected"
+          }
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Harness packages
+        run: pnpm run build:official
+
+      - name: Build AgentMux installer
+        env:
+          CSC_LINK: ${{ secrets.WINDOWS_CERTIFICATE }}
+          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: pnpm desktop:package
+
+      - name: Write checksum
+        shell: pwsh
+        run: |
+          $artifact = Resolve-Path apps/desktop/dist/AgentMux-Setup.exe
+          $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $artifact).Hash.ToLowerInvariant()
+          "$hash  AgentMux-Setup.exe" | Set-Content -Encoding ascii apps/desktop/dist/SHA256SUMS.txt
+
+      - name: Create GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $arguments = @(
+            'release', 'create', $env:GITHUB_REF_NAME,
+            'apps/desktop/dist/AgentMux-Setup.exe',
+            'apps/desktop/dist/AgentMux-Setup.exe.blockmap',
+            'apps/desktop/dist/latest.yml',
+            'apps/desktop/dist/SHA256SUMS.txt',
+            '--repo', $env:GITHUB_REPOSITORY,
+            '--verify-tag',
+            '--generate-notes',
+            '--title', "AgentMux $($env:GITHUB_REF_NAME.Replace('agentmux-v', ''))"
+          )
+          if ($env:GITHUB_REF_NAME.Contains('-')) { $arguments += '--prerelease' }
+          gh @arguments
